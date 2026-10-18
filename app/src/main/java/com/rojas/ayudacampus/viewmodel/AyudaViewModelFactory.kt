@@ -2,13 +2,13 @@ package com.rojas.ayudacampus.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.rojas.ayudacampus.data.local.entity.Usuario
 import com.rojas.ayudacampus.data.prefs.PreferenciasStore
 import com.rojas.ayudacampus.data.repository.AyudaRepository
-
-// Crea cada ViewModel pasándole lo que necesita
 class AyudaViewModelFactory(
     private val repo: AyudaRepository,
-    private val prefs: PreferenciasStore
+    private val prefs: PreferenciasStore,
+    private val usuario: Usuario? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -16,6 +16,7 @@ class AyudaViewModelFactory(
         val vm: ViewModel = when {
             modelClass.isAssignableFrom(CategoriasViewModel::class.java) -> CategoriasViewModel(repo)
             modelClass.isAssignableFrom(SesionViewModel::class.java) -> SesionViewModel(repo, prefs)
+            modelClass.isAssignableFrom(MisTicketsViewModel::class.java) -> MisTicketsViewModel(repo, usuario!!)
             else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
         }
         return vm as T

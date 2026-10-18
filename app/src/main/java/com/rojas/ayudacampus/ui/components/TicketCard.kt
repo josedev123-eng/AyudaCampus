@@ -48,6 +48,9 @@ fun TicketCard(
     mostrarCliente: Boolean = false
 ) {
     val t = item.ticket
+    // Si no tiene ubicación se muestra la categoría
+    val lugar = t.ubicacion.ifBlank { item.categoria?.nombre ?: "-" }
+
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
@@ -56,6 +59,7 @@ fun TicketCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(Modifier.height(IntrinsicSize.Min)) {
+            // Franja de la prioridad
             Box(
                 Modifier
                     .width(6.dp)
@@ -63,16 +67,16 @@ fun TicketCard(
                     .background(colorPrioridad(t.prioridad))
             )
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .weight(1f)
                     .padding(12.dp)
             ) {
+                // Icono de la categoría
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Icon(
@@ -89,8 +93,9 @@ fun TicketCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
+                    // #0012 · Lab 3
                     Text(
-                        "#${t.id} · ${item.categoria?.nombre ?: "-"} · ${formatearFecha(t.fecha)}",
+                        "${numeroTicket(t.id)} · $lugar",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -101,10 +106,21 @@ fun TicketCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Spacer(Modifier.height(10.dp))
+                    // Chips a la izquierda y tiempo a la derecha
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         EstadoChip(t.estado)
                         PrioridadChip(t.prioridad)
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            tiempoRelativo(t.fecha),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -129,4 +145,21 @@ fun iconoCategoria(icono: String): ImageVector = when (icono) {
 fun formatearFecha(millis: Long): String {
     val formato = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("es", "PE"))
     return formato.format(Date(millis))
+}
+
+// 12 -> "#0012"
+fun numeroTicket(id: Int): String = "#" + id.toString().padStart(4, '0')
+
+// Cuánto tiempo pasó desde la fecha: "Ahora", "Hace 15 min", "Hace 2 h", "Ayer", "Hace 3 d"
+fun tiempoRelativo(millis: Long): String {
+    val minutos = (System.currentTimeMillis() - millis) / 60000
+    val horas = minutos / 60
+    val dias = horas / 24
+    return when {
+        minutos < 1 -> "Ahora"
+        minutos < 60 -> "Hace $minutos min"
+        horas < 24 -> "Hace $horas h"
+        dias < 2 -> "Ayer"
+        else -> "Hace $dias d"
+    }
 }
