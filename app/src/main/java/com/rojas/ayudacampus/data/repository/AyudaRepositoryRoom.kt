@@ -1,13 +1,30 @@
 package com.rojas.ayudacampus.data.repository
 
 import com.rojas.ayudacampus.data.local.dao.CategoriaDao
+import com.rojas.ayudacampus.data.local.dao.TicketDao
+import com.rojas.ayudacampus.data.local.dao.UsuarioDao
 import com.rojas.ayudacampus.data.local.entity.Categoria
+import com.rojas.ayudacampus.data.local.entity.Comentario
+import com.rojas.ayudacampus.data.local.entity.Ticket
+import com.rojas.ayudacampus.data.local.entity.Usuario
+import com.rojas.ayudacampus.data.local.relation.TicketConDetalle
+import com.rojas.ayudacampus.model.ConteoCategoria
+import com.rojas.ayudacampus.model.EstadoTicket
+import com.rojas.ayudacampus.model.Prioridad
 import kotlinx.coroutines.flow.Flow
 
 class AyudaRepositoryRoom(
-    private val categoriaDao: CategoriaDao
-    // TODO (Paso 4): usuarioDao y ticketDao
+    private val categoriaDao: CategoriaDao,
+    private val usuarioDao: UsuarioDao,
+    private val ticketDao: TicketDao
 ) : AyudaRepository {
+
+    // ---------- Usuarios ----------
+
+    override suspend fun login(correo: String, clave: String): Usuario? =
+        usuarioDao.login(correo, clave)
+
+    // ---------- Categorías (lista) ----------
 
     override fun observarCategorias(): Flow<List<Categoria>> = categoriaDao.observarTodas()
 
@@ -26,5 +43,66 @@ class AyudaRepositoryRoom(
 
     override suspend fun cambiarActiva(id: Int, activa: Boolean) = categoriaDao.cambiarActiva(id, activa)
 
-    // TODO (Paso 4): implementar usuarios, tickets y panel
+    // ---------- Tickets ----------
+
+    override suspend fun crearTicket(
+        clienteId: Int, categoriaId: Int, titulo: String,
+        descripcion: String, ubicacion: String, prioridad: Prioridad
+    ): Long {
+        val ticket = Ticket(
+            clienteId = clienteId,
+            categoriaId = categoriaId,
+            titulo = titulo,
+            descripcion = descripcion,
+            ubicacion = ubicacion,
+            prioridad = prioridad.name,
+            estado = EstadoTicket.ABIERTO.name,
+            fecha = System.currentTimeMillis()
+        )
+        return ticketDao.insertarTicket(ticket)
+    }
+
+    override fun observarTicketsCliente(clienteId: Int): Flow<List<TicketConDetalle>> =
+        ticketDao.observarPorCliente(clienteId)
+
+    override fun observarTodosLosTickets(): Flow<List<TicketConDetalle>> =
+        ticketDao.observarTodos()
+
+    override fun observarTicket(id: Int): Flow<TicketConDetalle?> =
+        ticketDao.observarUno(id)
+
+    override suspend fun cambiarEstado(ticketId: Int, estado: EstadoTicket) =
+        ticketDao.actualizarEstado(ticketId, estado.name)
+
+    override suspend fun cambiarPrioridad(ticketId: Int, prioridad: Prioridad) =
+        ticketDao.actualizarPrioridad(ticketId, prioridad.name)
+
+    override suspend fun cerrarConCalificacion(ticketId: Int, calificacion: Int) =
+        ticketDao.cerrar(ticketId, calificacion, System.currentTimeMillis())
+
+    override suspend fun reabrir(ticketId: Int) = ticketDao.reabrir(ticketId)
+
+    override suspend fun agregarComentario(ticketId: Int, autor: Usuario, texto: String) {
+        // Copia nombre y rol del autor en ese momento
+        val comentario = Comentario(
+            ticketId = ticketId,
+            autorId = autor.id,
+            autorNombre = autor.nombre,
+            autorRol = autor.rol,
+            texto = texto,
+            fecha = System.currentTimeMillis()
+        )
+        ticketDao.insertarComentario(comentario)
+    }
+
+    // ---------- Panel ----------
+
+    override fun observarCantidadPorEstado(estado: EstadoTicket): Flow<Int> =
+        ticketDao.contarPorEstado(estado.name)
+
+    override fun observarCantidadPorCategoria(): Flow<List<ConteoCategoria>> =
+        ticketDao.contarPorCategoria()
+
+    override fun observarAltasSinAtender(limite: Long): Flow<Int> =
+        ticketDao.contarAltasSinAtender(limite)
 }

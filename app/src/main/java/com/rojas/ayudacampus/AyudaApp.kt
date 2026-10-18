@@ -17,7 +17,11 @@ class AyudaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         database = AyudaDatabase.obtener(this)
-        repository = AyudaRepositoryRoom(database.categoriaDao())
+        repository = AyudaRepositoryRoom(
+            database.categoriaDao(),
+            database.usuarioDao(),
+            database.ticketDao()
+        )
 
         // Siembra los datos de prueba solo la primera vez
         CoroutineScope(Dispatchers.IO).launch {
