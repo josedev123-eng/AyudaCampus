@@ -8,11 +8,14 @@ import com.rojas.ayudacampus.data.repository.AyudaRepositoryRoom
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.rojas.ayudacampus.data.prefs.PreferenciasStore
 
 class AyudaApp : Application() {
 
     lateinit var database: AyudaDatabase
     lateinit var repository: AyudaRepository
+
+    lateinit var preferencias: PreferenciasStore
 
     override fun onCreate() {
         super.onCreate()
@@ -22,6 +25,7 @@ class AyudaApp : Application() {
             database.usuarioDao(),
             database.ticketDao()
         )
+        preferencias = PreferenciasStore(this)
 
         // Siembra los datos de prueba solo la primera vez
         CoroutineScope(Dispatchers.IO).launch {
