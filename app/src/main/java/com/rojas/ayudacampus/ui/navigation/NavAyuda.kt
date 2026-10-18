@@ -26,6 +26,8 @@ import com.rojas.ayudacampus.viewmodel.AyudaViewModelFactory
 import com.rojas.ayudacampus.viewmodel.CategoriasViewModel
 import com.rojas.ayudacampus.viewmodel.MisTicketsViewModel
 import com.rojas.ayudacampus.viewmodel.SesionViewModel
+import com.rojas.ayudacampus.ui.cliente.NuevoTicketScreen
+import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
 
 @Composable
 fun NavAyuda(app: AyudaApp) {
@@ -87,13 +89,18 @@ fun NavAyuda(app: AyudaApp) {
             }
         }
 
-        // TODO (Paso 8): reemplazar por NuevoTicketScreen
         composable(Rutas.NUEVO_TICKET) {
-            PantallaTemporal(
-                "Nuevo ticket",
-                onVolver = { nav.popBackStack() },
-                onCerrarSesion = { cerrarSesion() }
+            val u = usuario ?: return@composable
+            val vm: NuevoTicketViewModel = viewModel(
+                factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
             )
+            AyudaTheme(rol = Rol.CLIENTE) {
+                NuevoTicketScreen(
+                    vm = vm,
+                    onEnviado = { nav.popBackStack() },
+                    onAtras = { nav.popBackStack() }
+                )
+            }
         }
 
         // TODO (Paso 9): reemplazar por DetalleTicketScreen
