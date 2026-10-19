@@ -49,6 +49,10 @@ import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
 import com.rojas.ayudacampus.viewmodel.PanelViewModel
 import com.rojas.ayudacampus.viewmodel.SesionViewModel
 import com.rojas.ayudacampus.viewmodel.TicketDetalleViewModel
+import androidx.compose.runtime.remember
+import com.rojas.ayudacampus.ui.soporte.AtenderTicketScreen
+import com.rojas.ayudacampus.ui.soporte.FormularioCategoriaScreen
+import com.rojas.ayudacampus.viewmodel.AtenderViewModel
 
 @Composable
 fun NavAyuda(app: AyudaApp) {
@@ -230,14 +234,35 @@ fun NavAyuda(app: AyudaApp) {
                     )
                 }
 
-                // TODO (Paso 11): reemplazar por AtenderTicketScreen
-                composable(Rutas.ATENDER) {
-                    PantallaTemporal("Atender ticket", onCerrarSesion = { cerrarSesion() })
+                composable(
+                    Rutas.ATENDER,
+                    arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                ) { entrada ->
+                    val u = usuario ?: return@composable
+                    val id = entrada.arguments?.getInt("ticketId") ?: 0
+                    val vm: AtenderViewModel = viewModel(
+                        factory = AyudaViewModelFactory(app.repository, app.preferencias, u, id)
+                    )
+                    AtenderTicketScreen(vm = vm, onAtras = { nav.popBackStack() })
                 }
 
                 composable(Rutas.CATEGORIAS) {
                     val vm: CategoriasViewModel = viewModel(factory = fabrica)
-                    CategoriasScreen(vm = vm, onEditar = { /* TODO (Paso 11): abrir el formulario */ })
+                    CategoriasScreen(vm = vm, onEditar = { id -> nav.navigate(Rutas.formCategoria(id)) })
+                }
+
+                composable(
+                    Rutas.FORM_CATEGORIA,
+                    arguments = listOf(navArgument("id") {
+                        type = NavType.IntType
+                        defaultValue = 0
+                    })
+                ) { entrada ->
+                    val id = entrada.arguments?.getInt("id") ?: 0
+                    // Usa el mismo ViewModel de la lista para que el guardado no se corte al volver
+                    val padre = remember(entrada) { nav.getBackStackEntry(Rutas.CATEGORIAS) }
+                    val vm: CategoriasViewModel = viewModel(viewModelStoreOwner = padre, factory = fabrica)
+                    FormularioCategoriaScreen(vm = vm, id = id, onVolver = { nav.popBackStack() })
                 }
 
                 // TODO (Paso 12): reemplazar por AjustesScreen
