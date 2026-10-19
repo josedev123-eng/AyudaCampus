@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -34,12 +37,16 @@ import com.rojas.ayudacampus.ui.cliente.LoginScreen
 import com.rojas.ayudacampus.ui.cliente.MisTicketsScreen
 import com.rojas.ayudacampus.ui.cliente.NuevoTicketScreen
 import com.rojas.ayudacampus.ui.cliente.SplashScreen
+import com.rojas.ayudacampus.ui.soporte.BandejaScreen
 import com.rojas.ayudacampus.ui.soporte.CategoriasScreen
+import com.rojas.ayudacampus.ui.soporte.PanelScreen
 import com.rojas.ayudacampus.ui.theme.AyudaTheme
 import com.rojas.ayudacampus.viewmodel.AyudaViewModelFactory
+import com.rojas.ayudacampus.viewmodel.BandejaViewModel
 import com.rojas.ayudacampus.viewmodel.CategoriasViewModel
 import com.rojas.ayudacampus.viewmodel.MisTicketsViewModel
 import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
+import com.rojas.ayudacampus.viewmodel.PanelViewModel
 import com.rojas.ayudacampus.viewmodel.SesionViewModel
 import com.rojas.ayudacampus.viewmodel.TicketDetalleViewModel
 
@@ -79,9 +86,10 @@ fun NavAyuda(app: AyudaApp) {
     }
 
     // Cambia de pestaña sin apilar pantallas repetidas
-    fun irATab(ruta: String) {
+    // (inicio = primera pantalla del perfil: Mis tickets o Panel)
+    fun irATab(ruta: String, inicio: String = Rutas.MIS_TICKETS) {
         nav.navigate(ruta) {
-            popUpTo(Rutas.MIS_TICKETS)
+            popUpTo(inicio)
             launchSingleTop = true
         }
     }
@@ -109,6 +117,35 @@ fun NavAyuda(app: AyudaApp) {
                             onClick = { irATab(Rutas.PERFIL) },
                             icon = { Icon(Icons.Filled.Person, contentDescription = null) },
                             label = { Text("Perfil") }
+                        )
+                    }
+                }
+                // Barra de Soporte: Panel, Tickets, Categorías y Ajustes
+                if (rutaActual in Rutas.TABS_SOPORTE) {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                        NavigationBarItem(
+                            selected = rutaActual == Rutas.PANEL,
+                            onClick = { irATab(Rutas.PANEL, Rutas.PANEL) },
+                            icon = { Icon(Icons.Filled.BarChart, contentDescription = null) },
+                            label = { Text("Panel") }
+                        )
+                        NavigationBarItem(
+                            selected = rutaActual == Rutas.BANDEJA,
+                            onClick = { irATab(Rutas.BANDEJA, Rutas.PANEL) },
+                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                            label = { Text("Tickets") }
+                        )
+                        NavigationBarItem(
+                            selected = rutaActual == Rutas.CATEGORIAS,
+                            onClick = { irATab(Rutas.CATEGORIAS, Rutas.PANEL) },
+                            icon = { Icon(Icons.Filled.LocalOffer, contentDescription = null) },
+                            label = { Text("Categorías") }
+                        )
+                        NavigationBarItem(
+                            selected = rutaActual == Rutas.AJUSTES,
+                            onClick = { irATab(Rutas.AJUSTES, Rutas.PANEL) },
+                            icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                            label = { Text("Ajustes") }
                         )
                     }
                 }
@@ -179,9 +216,23 @@ fun NavAyuda(app: AyudaApp) {
 
                 // ---------- Soporte TI ----------
 
-                // TODO (Paso 10): reemplazar por PanelScreen
                 composable(Rutas.PANEL) {
-                    PantallaTemporal("Panel de soporte", onCerrarSesion = { cerrarSesion() })
+                    val vm: PanelViewModel = viewModel(factory = fabrica)
+                    PanelScreen(vm = vm, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
+                }
+
+                composable(Rutas.BANDEJA) {
+                    val vm: BandejaViewModel = viewModel(factory = fabrica)
+                    BandejaScreen(
+                        vm = vm,
+                        onAtender = { id -> nav.navigate(Rutas.atender(id)) },
+                        onAtras = { nav.popBackStack() }
+                    )
+                }
+
+                // TODO (Paso 11): reemplazar por AtenderTicketScreen
+                composable(Rutas.ATENDER) {
+                    PantallaTemporal("Atender ticket", onCerrarSesion = { cerrarSesion() })
                 }
 
                 composable(Rutas.CATEGORIAS) {
@@ -189,7 +240,10 @@ fun NavAyuda(app: AyudaApp) {
                     CategoriasScreen(vm = vm, onEditar = { /* TODO (Paso 11): abrir el formulario */ })
                 }
 
-                // TODO (Pasos 10 al 12): pantallas de Soporte y su barra
+                // TODO (Paso 12): reemplazar por AjustesScreen
+                composable(Rutas.AJUSTES) {
+                    PantallaTemporal("Ajustes", onCerrarSesion = { cerrarSesion() })
+                }
             }
         }
     }

@@ -48,8 +48,12 @@ fun TicketCard(
     mostrarCliente: Boolean = false
 ) {
     val t = item.ticket
-    // Si no tiene ubicación se muestra la categoría
-    val lugar = t.ubicacion.ifBlank { item.categoria?.nombre ?: "-" }
+    // Estudiante: ubicación (o categoría). Soporte: nombre corto del cliente
+    val detalle = if (mostrarCliente) {
+        nombreCorto(item.cliente?.nombre ?: "-")
+    } else {
+        t.ubicacion.ifBlank { item.categoria?.nombre ?: "-" }
+    }
 
     Card(
         onClick = onClick,
@@ -93,19 +97,12 @@ fun TicketCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    // #0012 · Lab 3
+                    // #0012 · Lab 3   o   #0012 · Juan P.
                     Text(
-                        "${numeroTicket(t.id)} · $lugar",
+                        "${numeroTicket(t.id)} · $detalle",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (mostrarCliente) {
-                        Text(
-                            "Cliente: ${item.cliente?.nombre ?: "-"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     Spacer(Modifier.height(10.dp))
                     // Chips a la izquierda y tiempo a la derecha
                     Row(
@@ -147,10 +144,15 @@ fun formatearFecha(millis: Long): String {
     return formato.format(Date(millis))
 }
 
+// "Juan Pérez" -> "Juan P."
+fun nombreCorto(nombre: String): String {
+    val partes = nombre.trim().split(" ")
+    return if (partes.size > 1) "${partes[0]} ${partes[1].first()}." else nombre
+}
+
 // 12 -> "#0012"
 fun numeroTicket(id: Int): String = "#" + id.toString().padStart(4, '0')
 
-// Cuánto tiempo pasó desde la fecha: "Ahora", "Hace 15 min", "Hace 2 h", "Ayer", "Hace 3 d"
 fun tiempoRelativo(millis: Long): String {
     val minutos = (System.currentTimeMillis() - millis) / 60000
     val horas = minutos / 60
