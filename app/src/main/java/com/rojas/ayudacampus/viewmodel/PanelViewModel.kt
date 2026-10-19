@@ -32,6 +32,25 @@ class PanelViewModel(private val repo: AyudaRepository) : ViewModel() {
     private val cerrados: StateFlow<Int> = repo.observarCantidadPorEstado(EstadoTicket.CERRADO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    // Tiempo promedio de resolución de tickets CERRADOS
+    val tiempoPromedio: StateFlow<String> = repo.observarTiempoPromedioResolucion()
+        .map { ms ->
+            if (ms == null || ms <= 0) {
+                "Sin datos"
+            } else {
+                val totalMinutos = ms / (1000 * 60)
+                val horas = totalMinutos / 60
+                val minutos = totalMinutos % 60
+                when {
+                    horas > 0 && minutos > 0 -> "$horas h $minutos min"
+                    horas > 0 -> "$horas h"
+                    minutos > 0 -> "$minutos min"
+                    else -> "< 1 min"
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Sin datos")
+
     // ---------- Datos para los gráficos ----------
 
     // GraficoDona: un dato por estado con su color

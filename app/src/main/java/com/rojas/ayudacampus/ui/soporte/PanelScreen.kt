@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -48,6 +49,7 @@ fun PanelScreen(
     val abiertos by vm.abiertos.collectAsState()
     val enProceso by vm.enProceso.collectAsState()
     val resueltos by vm.resueltos.collectAsState()
+    val tiempoPromedio by vm.tiempoPromedio.collectAsState()
     val porEstado by vm.porEstado.collectAsState()
     val porCategoria by vm.porCategoria.collectAsState()
     val altas by vm.altasSinAtender.collectAsState()
@@ -80,6 +82,34 @@ fun PanelScreen(
                 Contador("Abiertos", abiertos, EstadoAbierto, Modifier.weight(1f))
                 Contador("En proceso", enProceso, EstadoEnProceso, Modifier.weight(1f))
                 Contador("Resueltos", resueltos, EstadoResuelto, Modifier.weight(1f))
+            }
+
+            // Tarjeta de Tiempo promedio de resolución
+            TarjetaBlanca {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = "Reloj",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = "Tiempo promedio de resolución",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = tiempoPromedio,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
 
             // Gráfico de dona
