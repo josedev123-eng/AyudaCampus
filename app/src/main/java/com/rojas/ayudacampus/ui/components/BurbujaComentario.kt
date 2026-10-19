@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,44 +24,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rojas.ayudacampus.data.local.entity.Comentario
 import com.rojas.ayudacampus.model.Rol
+import com.rojas.ayudacampus.ui.theme.CianContenedor
+import com.rojas.ayudacampus.ui.theme.VioletaContenedor
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 // Propios a la derecha (color primario), los del otro perfil a la izquierda
 @Composable
 fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
+    // "Tú · 10:32" o "Soporte TI · 10:20"
+    val autor = when {
+        esPropio -> "Tú"
+        c.autorRol == Rol.ADMIN.name -> "Soporte TI"
+        else -> c.autorNombre
+    }
+    // Soporte en violeta suave y estudiante en cian suave
+    val colorOtro = if (c.autorRol == Rol.ADMIN.name) VioletaContenedor else CianContenedor
+
     Row(
         horizontalArrangement = if (esPropio) Arrangement.End else Arrangement.Start,
         modifier = Modifier.fillMaxWidth()
     ) {
         Surface(
-            color = if (esPropio) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (esPropio) MaterialTheme.colorScheme.primary else colorOtro,
+            contentColor = if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
                 bottomStart = if (esPropio) 16.dp else 4.dp,
                 bottomEnd = if (esPropio) 4.dp else 16.dp
             ),
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier.widthIn(max = 260.dp)
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Text(
-                    if (c.autorRol == Rol.ADMIN.name) "${c.autorNombre} · Soporte TI" else c.autorNombre,
+                    "$autor · ${horaComentario(c.fecha)}",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(c.texto, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    formatearFecha(c.fecha),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.End)
-                )
             }
         }
     }
 }
 
 // Barra inferior para escribir un comentario o una respuesta
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoMensaje(
     texto: String,
@@ -70,12 +78,12 @@ fun CampoMensaje(
     onEnviar: () -> Unit,
     placeholder: String = "Escribe un comentario..."
 ) {
-    Surface(tonalElevation = 3.dp, shadowElevation = 6.dp) {
+    Surface(color = MaterialTheme.colorScheme.background) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             OutlinedTextField(
                 value = texto,
@@ -90,5 +98,18 @@ fun CampoMensaje(
                 Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
             }
         }
+    }
+}
+
+fun horaComentario(millis: Long): String {
+    val hoy = Calendar.getInstance()
+    val fecha = Calendar.getInstance().apply { timeInMillis = millis }
+    val mismoAnio = hoy.get(Calendar.YEAR) == fecha.get(Calendar.YEAR)
+    val diaHoy = hoy.get(Calendar.DAY_OF_YEAR)
+    val diaFecha = fecha.get(Calendar.DAY_OF_YEAR)
+    return when {
+        mismoAnio && diaHoy == diaFecha -> SimpleDateFormat("HH:mm", Locale("es", "PE")).format(Date(millis))
+        mismoAnio && diaHoy - diaFecha == 1 -> "ayer"
+        else -> SimpleDateFormat("dd/MM", Locale("es", "PE")).format(Date(millis))
     }
 }
