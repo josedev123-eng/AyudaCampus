@@ -7,6 +7,7 @@ import com.rojas.ayudacampus.model.ConteoCategoria
 import com.rojas.ayudacampus.model.EstadoTicket
 import com.rojas.ayudacampus.model.Prioridad
 import kotlinx.coroutines.flow.Flow
+import com.rojas.ayudacampus.model.Rol
 
 // El contrato: los ViewModels solo conocen esta interface
 interface AyudaRepository {
@@ -14,6 +15,8 @@ interface AyudaRepository {
     suspend fun login(correo: String, clave: String): Usuario?
 
     suspend fun obtenerUsuario(id: Int): Usuario?
+
+    suspend fun obtenerUsuarioPorRol(rol: Rol): Usuario?
 
     fun observarCategorias(): Flow<List<Categoria>>
     fun observarCategoriasActivas(): Flow<List<Categoria>>

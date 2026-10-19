@@ -49,6 +49,19 @@ class MisTicketsViewModel(
         .map { lista -> lista.count { it.ticket.estado == EstadoTicket.ABIERTO.name } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    // Para el perfil: resueltos (incluye cerrados) y total
+    val cantidadResueltos: StateFlow<Int> = misTickets
+        .map { lista ->
+            lista.count {
+                it.ticket.estado == EstadoTicket.RESUELTO.name || it.ticket.estado == EstadoTicket.CERRADO.name
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val cantidadTotal: StateFlow<Int> = misTickets
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
     fun cambiarFiltro(f: String) {
         _filtro.value = f
     }

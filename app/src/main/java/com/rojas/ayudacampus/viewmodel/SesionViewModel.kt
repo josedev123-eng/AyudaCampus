@@ -24,8 +24,18 @@ class SesionViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    // ---------- Preferencias (DataStore) ----------
+
     val modoOscuro: StateFlow<Boolean> = prefs.modoOscuro
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val notificaciones: StateFlow<Boolean> = prefs.notificaciones
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val recibirTickets: StateFlow<Boolean> = prefs.recibirTickets
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    // ---------- Login ----------
 
     fun login(correo: String, clave: String, rolSeleccionado: Rol) {
         // 1. Campos vacíos
@@ -34,7 +44,7 @@ class SesionViewModel(
             return
         }
         viewModelScope.launch {
-            val usuario = repo.login(correo.trim(), clave)
+            val usuario = repo.login(correo.trim().lowercase(), clave.trim())
             if (usuario == null) {
                 // 2. Credenciales incorrectas
                 _error.value = "Correo o contraseña incorrectos"
@@ -64,9 +74,34 @@ class SesionViewModel(
         }
     }
 
+    // Modo práctica: guarda el otro perfil y avisa para navegar a su grafo
+    fun cambiarPerfil(alTerminar: (Usuario) -> Unit) {
+        val actual = _usuarioActual.value ?: return
+        val otroRol = if (actual.rol == Rol.ADMIN.name) Rol.CLIENTE else Rol.ADMIN
+        viewModelScope.launch {
+            val otro = repo.obtenerUsuarioPorRol(otroRol) ?: return@launch
+            prefs.guardarSesion(otro.rol, otro.id)
+            _usuarioActual.value = otro
+            alTerminar(otro)
+        }
+    }
+
+    // Borra el perfil guardado
     fun cerrarSesion() {
         _usuarioActual.value = null
         viewModelScope.launch { prefs.cerrarSesion() }
+    }
+
+    fun guardarModoOscuro(b: Boolean) {
+        viewModelScope.launch { prefs.guardarModoOscuro(b) }
+    }
+
+    fun guardarNotificaciones(b: Boolean) {
+        viewModelScope.launch { prefs.guardarNotificaciones(b) }
+    }
+
+    fun guardarRecibirTickets(b: Boolean) {
+        viewModelScope.launch { prefs.guardarRecibirTickets(b) }
     }
 
     fun limpiarError() {

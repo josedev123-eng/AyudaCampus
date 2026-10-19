@@ -43,6 +43,7 @@ import com.rojas.ayudacampus.viewmodel.SesionViewModel
 fun LoginScreen(vm: SesionViewModel, onIngresar: (Usuario) -> Unit) {
     val usuario by vm.usuarioActual.collectAsState()
     val error by vm.error.collectAsState()
+    val oscuro by vm.modoOscuro.collectAsState()
 
     var rol by remember { mutableStateOf(Rol.CLIENTE) }
     var correo by remember { mutableStateOf("") }
@@ -53,7 +54,7 @@ fun LoginScreen(vm: SesionViewModel, onIngresar: (Usuario) -> Unit) {
         usuario?.let { onIngresar(it) }
     }
 
-    AyudaTheme(rol = rol) {
+    AyudaTheme(rol = rol, modoOscuro = oscuro) {
         Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier

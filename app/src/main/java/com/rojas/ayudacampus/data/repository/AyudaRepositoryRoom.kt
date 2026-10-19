@@ -12,6 +12,7 @@ import com.rojas.ayudacampus.model.ConteoCategoria
 import com.rojas.ayudacampus.model.EstadoTicket
 import com.rojas.ayudacampus.model.Prioridad
 import kotlinx.coroutines.flow.Flow
+import com.rojas.ayudacampus.model.Rol
 
 class AyudaRepositoryRoom(
     private val categoriaDao: CategoriaDao,
@@ -26,6 +27,9 @@ class AyudaRepositoryRoom(
 
     override suspend fun obtenerUsuario(id: Int): Usuario? =
         usuarioDao.buscarPorId(id)
+
+    override suspend fun obtenerUsuarioPorRol(rol: Rol): Usuario? =
+        usuarioDao.buscarPorRol(rol.name)
 
     // ---------- Categorías (lista) ----------
 

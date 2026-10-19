@@ -11,6 +11,9 @@ interface UsuarioDao {
     @Query("SELECT * FROM usuarios WHERE id = :id")
     suspend fun buscarPorId(id: Int): Usuario?
 
+    @Query("SELECT * FROM usuarios WHERE rol = :rol LIMIT 1")
+    suspend fun buscarPorRol(rol: String): Usuario?
+
     @Query("SELECT * FROM usuarios WHERE correo = :correo AND clave = :clave LIMIT 1")
     suspend fun login(correo: String, clave: String): Usuario?
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -52,6 +53,7 @@ import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
 @Composable
 fun NuevoTicketScreen(
     vm: NuevoTicketViewModel,
+    recibirTickets: Boolean,
     onEnviado: () -> Unit,
     onAtras: () -> Unit
 ) {
@@ -87,6 +89,11 @@ fun NuevoTicketScreen(
             )
         }
     ) { padding ->
+        // Soporte apagó "Recibir tickets": no se puede crear
+        if (!recibirTickets) {
+            MesaCerrada(Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
@@ -192,6 +199,46 @@ fun NuevoTicketScreen(
 
             Spacer(Modifier.height(8.dp))
             AyudaButton(texto = "Enviar ticket", onClick = { vm.enviar() })
+        }
+    }
+}
+
+// Aviso cuando Soporte cerró la mesa de ayuda
+@Composable
+private fun MesaCerrada(modifier: Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.errorContainer,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Icon(
+                    Icons.Filled.EventBusy,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        "Mesa de ayuda cerrada",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        "Por ahora no se reciben tickets nuevos. Intenta más tarde.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
         }
     }
 }

@@ -1,8 +1,5 @@
 package com.rojas.ayudacampus.ui.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -17,17 +14,17 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rojas.ayudacampus.AyudaApp
@@ -36,11 +33,16 @@ import com.rojas.ayudacampus.ui.cliente.DetalleTicketScreen
 import com.rojas.ayudacampus.ui.cliente.LoginScreen
 import com.rojas.ayudacampus.ui.cliente.MisTicketsScreen
 import com.rojas.ayudacampus.ui.cliente.NuevoTicketScreen
+import com.rojas.ayudacampus.ui.cliente.PerfilScreen
 import com.rojas.ayudacampus.ui.cliente.SplashScreen
+import com.rojas.ayudacampus.ui.soporte.AjustesScreen
+import com.rojas.ayudacampus.ui.soporte.AtenderTicketScreen
 import com.rojas.ayudacampus.ui.soporte.BandejaScreen
 import com.rojas.ayudacampus.ui.soporte.CategoriasScreen
+import com.rojas.ayudacampus.ui.soporte.FormularioCategoriaScreen
 import com.rojas.ayudacampus.ui.soporte.PanelScreen
 import com.rojas.ayudacampus.ui.theme.AyudaTheme
+import com.rojas.ayudacampus.viewmodel.AtenderViewModel
 import com.rojas.ayudacampus.viewmodel.AyudaViewModelFactory
 import com.rojas.ayudacampus.viewmodel.BandejaViewModel
 import com.rojas.ayudacampus.viewmodel.CategoriasViewModel
@@ -49,10 +51,6 @@ import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
 import com.rojas.ayudacampus.viewmodel.PanelViewModel
 import com.rojas.ayudacampus.viewmodel.SesionViewModel
 import com.rojas.ayudacampus.viewmodel.TicketDetalleViewModel
-import androidx.compose.runtime.remember
-import com.rojas.ayudacampus.ui.soporte.AtenderTicketScreen
-import com.rojas.ayudacampus.ui.soporte.FormularioCategoriaScreen
-import com.rojas.ayudacampus.viewmodel.AtenderViewModel
 
 @Composable
 fun NavAyuda(app: AyudaApp) {
@@ -62,6 +60,8 @@ fun NavAyuda(app: AyudaApp) {
     // La sesión se crea una sola vez y la comparten todas las pantallas
     val sesionVm: SesionViewModel = viewModel(factory = fabrica)
     val usuario by sesionVm.usuarioActual.collectAsState()
+    val oscuro by sesionVm.modoOscuro.collectAsState()
+    val recibirTickets by sesionVm.recibirTickets.collectAsState()
 
     // Ruta actual, para saber qué ítem de la barra marcar
     val entradaActual by nav.currentBackStackEntryAsState()
@@ -70,10 +70,10 @@ fun NavAyuda(app: AyudaApp) {
     // Cian para estudiante y violeta para Soporte
     val rolActual = if (usuario?.rol == Rol.ADMIN.name) Rol.ADMIN else Rol.CLIENTE
 
-    // Va a la pantalla principal del rol y borra Splash/Login de la pila
+    // Va al grafo del rol y limpia toda la pila (popUpTo)
     fun irAPrincipal(rol: String) {
-        val destino = if (rol == Rol.ADMIN.name) Rutas.PANEL else Rutas.MIS_TICKETS
-        nav.navigate(destino) {
+        val grafo = if (rol == Rol.ADMIN.name) Rutas.GRAFO_SOPORTE else Rutas.GRAFO_CLIENTE
+        nav.navigate(grafo) {
             popUpTo(nav.graph.id) { inclusive = true }
         }
     }
@@ -84,9 +84,15 @@ fun NavAyuda(app: AyudaApp) {
         }
     }
 
+    // Borra el perfil y vuelve al Login
     fun cerrarSesion() {
         sesionVm.cerrarSesion()
         irALogin()
+    }
+
+    // Guarda el otro perfil y navega a su grafo
+    fun cambiarPerfil() {
+        sesionVm.cambiarPerfil { otro -> irAPrincipal(otro.rol) }
     }
 
     // Cambia de pestaña sin apilar pantallas repetidas
@@ -98,7 +104,8 @@ fun NavAyuda(app: AyudaApp) {
         }
     }
 
-    AyudaTheme(rol = rolActual) {
+    // El modo oscuro cambia el tema de TODA la app al instante
+    AyudaTheme(rol = rolActual, modoOscuro = oscuro) {
         Scaffold(
             bottomBar = {
                 // Barra del estudiante: Tickets, Nuevo y Perfil
@@ -174,114 +181,122 @@ fun NavAyuda(app: AyudaApp) {
                     LoginScreen(vm = sesionVm, onIngresar = { u -> irAPrincipal(u.rol) })
                 }
 
-                // ---------- Estudiante ----------
+                // ================= Grafo del estudiante =================
+                navigation(route = Rutas.GRAFO_CLIENTE, startDestination = Rutas.MIS_TICKETS) {
 
-                composable(Rutas.MIS_TICKETS) {
-                    val u = usuario ?: return@composable
-                    val vm: MisTicketsViewModel = viewModel(
-                        factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
-                    )
-                    MisTicketsScreen(
-                        vm = vm,
-                        usuario = u,
-                        onAbrir = { id -> nav.navigate(Rutas.detalle(id)) },
-                        onNuevo = { irATab(Rutas.NUEVO_TICKET) }
-                    )
+                    composable(Rutas.MIS_TICKETS) {
+                        val u = usuario ?: return@composable
+                        val vm: MisTicketsViewModel = viewModel(
+                            factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
+                        )
+                        MisTicketsScreen(
+                            vm = vm,
+                            usuario = u,
+                            onAbrir = { id -> nav.navigate(Rutas.detalle(id)) },
+                            onNuevo = { irATab(Rutas.NUEVO_TICKET) }
+                        )
+                    }
+
+                    composable(Rutas.NUEVO_TICKET) {
+                        val u = usuario ?: return@composable
+                        val vm: NuevoTicketViewModel = viewModel(
+                            factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
+                        )
+                        NuevoTicketScreen(
+                            vm = vm,
+                            recibirTickets = recibirTickets,
+                            onEnviado = { nav.popBackStack() },
+                            onAtras = { nav.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        Rutas.DETALLE,
+                        arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                    ) { entrada ->
+                        val u = usuario ?: return@composable
+                        val id = entrada.arguments?.getInt("ticketId") ?: 0
+                        val vm: TicketDetalleViewModel = viewModel(
+                            factory = AyudaViewModelFactory(app.repository, app.preferencias, u, id)
+                        )
+                        DetalleTicketScreen(vm = vm, usuario = u, onAtras = { nav.popBackStack() })
+                    }
+
+                    composable(Rutas.PERFIL) {
+                        val u = usuario ?: return@composable
+                        val vm: MisTicketsViewModel = viewModel(
+                            factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
+                        )
+                        PerfilScreen(
+                            usuario = u,
+                            misTicketsVm = vm,
+                            sesionVm = sesionVm,
+                            onCambiarPerfil = { cambiarPerfil() },
+                            onCerrarSesion = { cerrarSesion() },
+                            onAtras = { nav.popBackStack() }
+                        )
+                    }
                 }
 
-                composable(Rutas.NUEVO_TICKET) {
-                    val u = usuario ?: return@composable
-                    val vm: NuevoTicketViewModel = viewModel(
-                        factory = AyudaViewModelFactory(app.repository, app.preferencias, u)
-                    )
-                    NuevoTicketScreen(
-                        vm = vm,
-                        onEnviado = { nav.popBackStack() },
-                        onAtras = { nav.popBackStack() }
-                    )
-                }
+                // ================= Grafo de Soporte TI =================
+                navigation(route = Rutas.GRAFO_SOPORTE, startDestination = Rutas.PANEL) {
 
-                composable(
-                    Rutas.DETALLE,
-                    arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
-                ) { entrada ->
-                    val u = usuario ?: return@composable
-                    val id = entrada.arguments?.getInt("ticketId") ?: 0
-                    val vm: TicketDetalleViewModel = viewModel(
-                        factory = AyudaViewModelFactory(app.repository, app.preferencias, u, id)
-                    )
-                    DetalleTicketScreen(vm = vm, usuario = u, onAtras = { nav.popBackStack() })
-                }
+                    composable(Rutas.PANEL) {
+                        val vm: PanelViewModel = viewModel(factory = fabrica)
+                        PanelScreen(vm = vm, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
+                    }
 
-                // TODO (Paso 12): reemplazar por PerfilScreen
-                composable(Rutas.PERFIL) {
-                    PantallaTemporal("Perfil", onCerrarSesion = { cerrarSesion() })
-                }
+                    composable(Rutas.BANDEJA) {
+                        val vm: BandejaViewModel = viewModel(factory = fabrica)
+                        BandejaScreen(
+                            vm = vm,
+                            onAtender = { id -> nav.navigate(Rutas.atender(id)) },
+                            onAtras = { nav.popBackStack() }
+                        )
+                    }
 
-                // ---------- Soporte TI ----------
+                    composable(
+                        Rutas.ATENDER,
+                        arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                    ) { entrada ->
+                        val u = usuario ?: return@composable
+                        val id = entrada.arguments?.getInt("ticketId") ?: 0
+                        val vm: AtenderViewModel = viewModel(
+                            factory = AyudaViewModelFactory(app.repository, app.preferencias, u, id)
+                        )
+                        AtenderTicketScreen(vm = vm, onAtras = { nav.popBackStack() })
+                    }
 
-                composable(Rutas.PANEL) {
-                    val vm: PanelViewModel = viewModel(factory = fabrica)
-                    PanelScreen(vm = vm, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
-                }
+                    composable(Rutas.CATEGORIAS) {
+                        val vm: CategoriasViewModel = viewModel(factory = fabrica)
+                        CategoriasScreen(vm = vm, onEditar = { id -> nav.navigate(Rutas.formCategoria(id)) })
+                    }
 
-                composable(Rutas.BANDEJA) {
-                    val vm: BandejaViewModel = viewModel(factory = fabrica)
-                    BandejaScreen(
-                        vm = vm,
-                        onAtender = { id -> nav.navigate(Rutas.atender(id)) },
-                        onAtras = { nav.popBackStack() }
-                    )
-                }
+                    composable(
+                        Rutas.FORM_CATEGORIA,
+                        arguments = listOf(navArgument("id") {
+                            type = NavType.IntType
+                            defaultValue = 0
+                        })
+                    ) { entrada ->
+                        val id = entrada.arguments?.getInt("id") ?: 0
+                        val padre = remember(entrada) { nav.getBackStackEntry(Rutas.CATEGORIAS) }
+                        val vm: CategoriasViewModel = viewModel(viewModelStoreOwner = padre, factory = fabrica)
+                        FormularioCategoriaScreen(vm = vm, id = id, onVolver = { nav.popBackStack() })
+                    }
 
-                composable(
-                    Rutas.ATENDER,
-                    arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
-                ) { entrada ->
-                    val u = usuario ?: return@composable
-                    val id = entrada.arguments?.getInt("ticketId") ?: 0
-                    val vm: AtenderViewModel = viewModel(
-                        factory = AyudaViewModelFactory(app.repository, app.preferencias, u, id)
-                    )
-                    AtenderTicketScreen(vm = vm, onAtras = { nav.popBackStack() })
-                }
-
-                composable(Rutas.CATEGORIAS) {
-                    val vm: CategoriasViewModel = viewModel(factory = fabrica)
-                    CategoriasScreen(vm = vm, onEditar = { id -> nav.navigate(Rutas.formCategoria(id)) })
-                }
-
-                composable(
-                    Rutas.FORM_CATEGORIA,
-                    arguments = listOf(navArgument("id") {
-                        type = NavType.IntType
-                        defaultValue = 0
-                    })
-                ) { entrada ->
-                    val id = entrada.arguments?.getInt("id") ?: 0
-                    // Usa el mismo ViewModel de la lista para que el guardado no se corte al volver
-                    val padre = remember(entrada) { nav.getBackStackEntry(Rutas.CATEGORIAS) }
-                    val vm: CategoriasViewModel = viewModel(viewModelStoreOwner = padre, factory = fabrica)
-                    FormularioCategoriaScreen(vm = vm, id = id, onVolver = { nav.popBackStack() })
-                }
-
-                // TODO (Paso 12): reemplazar por AjustesScreen
-                composable(Rutas.AJUSTES) {
-                    PantallaTemporal("Ajustes", onCerrarSesion = { cerrarSesion() })
+                    composable(Rutas.AJUSTES) {
+                        val u = usuario ?: return@composable
+                        AjustesScreen(
+                            usuario = u,
+                            sesionVm = sesionVm,
+                            onCambiarPerfil = { cambiarPerfil() },
+                            onCerrarSesion = { cerrarSesion() },
+                            onAtras = { nav.popBackStack() }
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PantallaTemporal(titulo: String, onCerrarSesion: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(titulo, style = MaterialTheme.typography.titleLarge)
-        TextButton(onClick = onCerrarSesion) { Text("Cerrar sesión") }
     }
 }
