@@ -116,10 +116,11 @@ fun BandejaScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(top = 4.dp, bottom = 16.dp)
                 ) {
-                    items(tickets, key = { it.ticket.id }) { item ->
+                    items(tickets, key = { it.item.ticket.id }) { itemSla ->
                         TicketCard(
-                            item = item,
-                            onClick = { onAtender(item.ticket.id) },
+                            item = itemSla.item,
+                            sla = itemSla.sla,
+                            onClick = { onAtender(itemSla.item.ticket.id) },
                             mostrarCliente = true
                         )
                     }

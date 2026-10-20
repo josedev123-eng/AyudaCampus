@@ -152,8 +152,12 @@ fun MisTicketsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(top = 4.dp, bottom = 88.dp)
                 ) {
-                    items(tickets, key = { it.ticket.id }) { item ->
-                        TicketCard(item = item, onClick = { onAbrir(item.ticket.id) })
+                    items(tickets, key = { it.item.ticket.id }) { itemSla ->
+                        TicketCard(
+                            item = itemSla.item,
+                            sla = itemSla.sla,
+                            onClick = { onAbrir(itemSla.item.ticket.id) }
+                        )
                     }
                 }
             }

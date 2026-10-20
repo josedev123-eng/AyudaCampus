@@ -3,13 +3,17 @@ package com.rojas.ayudacampus.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rojas.ayudacampus.data.local.entity.Usuario
-import com.rojas.ayudacampus.data.local.relation.TicketConDetalle
 import com.rojas.ayudacampus.data.repository.AyudaRepository
 import com.rojas.ayudacampus.model.EstadoTicket
+import com.rojas.ayudacampus.model.TicketConSla
+import com.rojas.ayudacampus.model.calcularSla
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -28,9 +32,18 @@ class MisTicketsViewModel(
     // El estudiante solo ve SUS tickets
     private val misTickets = repo.observarTicketsCliente(usuario.id)
 
-    // Combina los 3 flujos: lista, filtro y búsqueda
-    val tickets: StateFlow<List<TicketConDetalle>> =
-        combine(misTickets, _filtro, _busqueda) { lista, filtro, texto ->
+    // Flujo que emite el tiempo actual cada minuto para actualizar los contadores SLA
+    private val relojFlow: Flow<Long> = flow {
+        emit(System.currentTimeMillis())
+        while (true) {
+            delay(60_000L)
+            emit(System.currentTimeMillis())
+        }
+    }
+
+    // Combina los flujos: lista, filtro, búsqueda y reloj para el cálculo de SLA
+    val tickets: StateFlow<List<TicketConSla>> =
+        combine(misTickets, _filtro, _busqueda, relojFlow) { lista, filtro, texto, ahora ->
             val buscado = texto.trim()
             lista.filter { item ->
                 val t = item.ticket
@@ -41,6 +54,8 @@ class MisTicketsViewModel(
                         t.titulo.contains(buscado, ignoreCase = true) ||
                         buscado.removePrefix("#").toIntOrNull() == t.id
                 pasaFiltro && pasaTexto
+            }.map { item ->
+                TicketConSla(item = item, sla = calcularSla(item, ahora))
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

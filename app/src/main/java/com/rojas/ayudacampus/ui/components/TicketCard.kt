@@ -32,20 +32,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rojas.ayudacampus.data.local.relation.TicketConDetalle
+import com.rojas.ayudacampus.model.SlaEstado
+import com.rojas.ayudacampus.model.SlaInfo
+import com.rojas.ayudacampus.ui.theme.EstadoAbierto
+import com.rojas.ayudacampus.ui.theme.PrioridadAlta
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Franja de color de la prioridad + icono de la categoría + chips de estado y prioridad
+// Franja de color de la prioridad + icono de la categoría + chips de estado, prioridad y SLA
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketCard(
     item: TicketConDetalle,
     onClick: () -> Unit,
-    mostrarCliente: Boolean = false
+    mostrarCliente: Boolean = false,
+    sla: SlaInfo? = null
 ) {
     val t = item.ticket
     // Estudiante: ubicación (o categoría). Soporte: nombre corto del cliente
@@ -97,14 +103,29 @@ fun TicketCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    // #0012 · Lab 3   o   #0012 · Juan P.
-                    Text(
-                        "${numeroTicket(t.id)} · $detalle",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // #0012 · Lab 3   o   #0012 · Juan P.  + tiempo a la derecha
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "${numeroTicket(t.id)} · $detalle",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            tiempoRelativo(t.fecha),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
                     Spacer(Modifier.height(10.dp))
-                    // Chips a la izquierda y tiempo a la derecha
+                    // Chips a la izquierda
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -112,16 +133,34 @@ fun TicketCard(
                     ) {
                         EstadoChip(t.estado)
                         PrioridadChip(t.prioridad)
-                        Spacer(Modifier.weight(1f))
-                        Text(
-                            tiempoRelativo(t.fecha),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        sla?.let { SlaChip(it) }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SlaChip(sla: SlaInfo) {
+    val (colorFondo, colorTexto) = when (sla.estado) {
+        SlaEstado.NORMAL -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+        SlaEstado.AMBAR -> EstadoAbierto.copy(alpha = 0.15f) to EstadoAbierto
+        SlaEstado.ROJO -> PrioridadAlta.copy(alpha = 0.15f) to PrioridadAlta
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(colorFondo)
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = sla.texto,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = colorTexto
+        )
     }
 }
 
