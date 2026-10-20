@@ -18,6 +18,7 @@ class AyudaViewModelFactory(
         val vm: ViewModel = when {
             modelClass.isAssignableFrom(CategoriasViewModel::class.java) -> CategoriasViewModel(repo)
             modelClass.isAssignableFrom(SesionViewModel::class.java) -> SesionViewModel(repo, prefs)
+            modelClass.isAssignableFrom(RegistroViewModel::class.java) -> RegistroViewModel(repo)
             modelClass.isAssignableFrom(MisTicketsViewModel::class.java) -> MisTicketsViewModel(repo, usuario!!)
             modelClass.isAssignableFrom(NuevoTicketViewModel::class.java) -> NuevoTicketViewModel(repo, usuario!!)
             modelClass.isAssignableFrom(TicketDetalleViewModel::class.java) -> TicketDetalleViewModel(repo, ticketId, usuario!!)

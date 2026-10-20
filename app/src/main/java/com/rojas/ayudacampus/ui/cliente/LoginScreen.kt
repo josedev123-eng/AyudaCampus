@@ -1,5 +1,6 @@
 package com.rojas.ayudacampus.ui.cliente
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +41,11 @@ import com.rojas.ayudacampus.viewmodel.SesionViewModel
 
 // Un solo login para los dos roles: el color cambia según la pestaña elegida
 @Composable
-fun LoginScreen(vm: SesionViewModel, onIngresar: (Usuario) -> Unit) {
+fun LoginScreen(
+    vm: SesionViewModel,
+    onIngresar: (Usuario) -> Unit,
+    onRegistrarse: () -> Unit = {}
+) {
     val usuario by vm.usuarioActual.collectAsState()
     val error by vm.error.collectAsState()
     val oscuro by vm.modoOscuro.collectAsState()
@@ -121,7 +126,9 @@ fun LoginScreen(vm: SesionViewModel, onIngresar: (Usuario) -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onRegistrarse() }
                     )
                 } else {
                     Card(

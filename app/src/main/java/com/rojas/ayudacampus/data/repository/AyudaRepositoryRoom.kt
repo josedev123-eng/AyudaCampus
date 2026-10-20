@@ -25,6 +25,21 @@ class AyudaRepositoryRoom(
     override suspend fun login(correo: String, clave: String): Usuario? =
         usuarioDao.login(correo, clave)
 
+    override suspend fun registrar(nombre: String, correo: String, clave: String): Boolean {
+        val correoLimpio = correo.trim().lowercase()
+        if (usuarioDao.existeCorreo(correoLimpio) > 0) {
+            return false
+        }
+        val nuevoUsuario = Usuario(
+            nombre = nombre.trim(),
+            correo = correoLimpio,
+            clave = clave,
+            rol = Rol.CLIENTE.name
+        )
+        usuarioDao.insertar(nuevoUsuario)
+        return true
+    }
+
     override suspend fun obtenerUsuario(id: Int): Usuario? =
         usuarioDao.buscarPorId(id)
 

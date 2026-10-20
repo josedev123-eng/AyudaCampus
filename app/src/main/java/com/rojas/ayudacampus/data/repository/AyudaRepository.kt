@@ -14,6 +14,8 @@ interface AyudaRepository {
     // Usuarios
     suspend fun login(correo: String, clave: String): Usuario?
 
+    suspend fun registrar(nombre: String, correo: String, clave: String): Boolean
+
     suspend fun obtenerUsuario(id: Int): Usuario?
 
     suspend fun obtenerUsuarioPorRol(rol: Rol): Usuario?

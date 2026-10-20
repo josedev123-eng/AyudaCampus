@@ -34,6 +34,7 @@ import com.rojas.ayudacampus.ui.cliente.LoginScreen
 import com.rojas.ayudacampus.ui.cliente.MisTicketsScreen
 import com.rojas.ayudacampus.ui.cliente.NuevoTicketScreen
 import com.rojas.ayudacampus.ui.cliente.PerfilScreen
+import com.rojas.ayudacampus.ui.cliente.RegistroScreen
 import com.rojas.ayudacampus.ui.cliente.SplashScreen
 import com.rojas.ayudacampus.ui.soporte.AjustesScreen
 import com.rojas.ayudacampus.ui.soporte.AtenderTicketScreen
@@ -49,6 +50,7 @@ import com.rojas.ayudacampus.viewmodel.CategoriasViewModel
 import com.rojas.ayudacampus.viewmodel.MisTicketsViewModel
 import com.rojas.ayudacampus.viewmodel.NuevoTicketViewModel
 import com.rojas.ayudacampus.viewmodel.PanelViewModel
+import com.rojas.ayudacampus.viewmodel.RegistroViewModel
 import com.rojas.ayudacampus.viewmodel.SesionViewModel
 import com.rojas.ayudacampus.viewmodel.TicketDetalleViewModel
 
@@ -178,7 +180,20 @@ fun NavAyuda(app: AyudaApp) {
                 }
 
                 composable(Rutas.LOGIN) {
-                    LoginScreen(vm = sesionVm, onIngresar = { u -> irAPrincipal(u.rol) })
+                    LoginScreen(
+                        vm = sesionVm,
+                        onIngresar = { u -> irAPrincipal(u.rol) },
+                        onRegistrarse = { nav.navigate(Rutas.REGISTRO) }
+                    )
+                }
+
+                composable(Rutas.REGISTRO) {
+                    val vm: RegistroViewModel = viewModel(factory = fabrica)
+                    RegistroScreen(
+                        vm = vm,
+                        onRegistrado = { nav.popBackStack() },
+                        onAtras = { nav.popBackStack() }
+                    )
                 }
 
                 // ================= Grafo del estudiante =================
