@@ -16,11 +16,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +68,7 @@ fun AtenderTicketScreen(
     val prioridadElegida by vm.prioridadElegida.collectAsState()
     val mensaje by vm.mensaje.collectAsState()
     var texto by remember { mutableStateOf("") }
+    var esNotaInterna by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
 
     // Muestra "Cambios guardados" u otros avisos del ViewModel
@@ -178,17 +181,31 @@ fun AtenderTicketScreen(
                         )
                     }
                 } else {
-                    // Campo para responder
+                    // Campo para responder / nota interna
                     item {
-                        CampoMensaje(
-                            texto = texto,
-                            onCambio = { texto = it },
-                            onEnviar = {
-                                vm.responder(texto)
-                                texto = ""
-                            },
-                            placeholder = "Responder al cliente..."
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FilterChip(
+                                selected = esNotaInterna,
+                                onClick = { esNotaInterna = !esNotaInterna },
+                                label = { Text("Nota interna") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Lock,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(end = 2.dp)
+                                    )
+                                }
+                            )
+                            CampoMensaje(
+                                texto = texto,
+                                onCambio = { texto = it },
+                                onEnviar = {
+                                    vm.responder(texto, esNotaInterna)
+                                    texto = ""
+                                },
+                                placeholder = if (esNotaInterna) "Escribe una nota interna (el estudiante no la verá)..." else "Responder al cliente..."
+                            )
+                        }
                     }
                     item {
                         AyudaButton(texto = "Guardar cambios", onClick = { vm.guardar() })

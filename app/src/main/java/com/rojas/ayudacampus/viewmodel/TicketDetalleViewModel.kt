@@ -9,6 +9,7 @@ import com.rojas.ayudacampus.model.EstadoTicket
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,7 +20,13 @@ class TicketDetalleViewModel(
 ) : ViewModel() {
 
     // Flow: si Soporte responde o cambia el estado, la pantalla se actualiza sola
+    // El estudiante nunca debe recibir comentarios con interno = true
     val ticket: StateFlow<TicketConDetalle?> = repo.observarTicket(ticketId)
+        .map { detalle ->
+            detalle?.let {
+                it.copy(comentarios = it.comentarios.filter { c -> !c.interno })
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // Estrellas elegidas en pantalla (0 = todavía no califica)

@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.rojas.ayudacampus.data.local.entity.Comentario
 import com.rojas.ayudacampus.model.Rol
 import com.rojas.ayudacampus.ui.theme.CianContenedor
+import com.rojas.ayudacampus.ui.theme.EstadoAbierto
 import com.rojas.ayudacampus.ui.theme.VioletaContenedor
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -36,34 +39,56 @@ import java.util.Locale
 fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
     // "Tú · 10:32" o "Soporte TI · 10:20"
     val autor = when {
-        esPropio -> "Tú"
+        esPropio && !c.interno -> "Tú"
         c.autorRol == Rol.ADMIN.name -> "Soporte TI"
         else -> c.autorNombre
     }
     // Soporte en violeta suave y estudiante en cian suave
     val colorOtro = if (c.autorRol == Rol.ADMIN.name) VioletaContenedor else CianContenedor
 
+    // Si es interno, fondo ámbar suave (EstadoAbierto con alpha)
+    val colorFondo = if (c.interno) EstadoAbierto.copy(alpha = 0.15f) else if (esPropio) MaterialTheme.colorScheme.primary else colorOtro
+    val colorContenido = if (c.interno) MaterialTheme.colorScheme.onSurface else if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+
     Row(
-        horizontalArrangement = if (esPropio) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = if (esPropio && !c.interno) Arrangement.End else Arrangement.Start,
         modifier = Modifier.fillMaxWidth()
     ) {
         Surface(
-            color = if (esPropio) MaterialTheme.colorScheme.primary else colorOtro,
-            contentColor = if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+            color = colorFondo,
+            contentColor = colorContenido,
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
-                bottomStart = if (esPropio) 16.dp else 4.dp,
-                bottomEnd = if (esPropio) 4.dp else 16.dp
+                bottomStart = if (esPropio && !c.interno) 16.dp else 4.dp,
+                bottomEnd = if (esPropio && !c.interno) 4.dp else 16.dp
             ),
             modifier = Modifier.widthIn(max = 260.dp)
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Text(
-                    "$autor · ${horaComentario(c.fecha)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                if (c.interno) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            "Nota interna · $autor · ${horaComentario(c.fecha)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    Text(
+                        "$autor · ${horaComentario(c.fecha)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Text(c.texto, style = MaterialTheme.typography.bodyMedium)
             }
         }

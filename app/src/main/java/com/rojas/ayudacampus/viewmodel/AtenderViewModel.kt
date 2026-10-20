@@ -50,11 +50,11 @@ class AtenderViewModel(
         _prioridadElegida.value = p
     }
 
-    // La respuesta se envía al momento (no espera a "Guardar cambios")
-    fun responder(texto: String) {
+    // La respuesta o nota interna se envía al momento (no espera a "Guardar cambios")
+    fun responder(texto: String, interno: Boolean = false) {
         if (texto.isBlank() || estaCerrado()) return
         viewModelScope.launch {
-            repo.agregarComentario(ticketId, usuario, texto.trim())
+            repo.agregarComentario(ticketId, usuario, texto.trim(), interno)
         }
     }
 

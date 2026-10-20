@@ -117,6 +117,15 @@ object DatosIniciales {
                 fecha = ahora - 3 * hora
             )
         )
+        // Nota interna de ejemplo
+        dao.insertarComentario(
+            Comentario(
+                ticketId = ticketProyector, autorId = 2, autorNombre = "Ana Soporte", autorRol = Rol.ADMIN.name,
+                texto = "Revisar garantía del proyector con el proveedor",
+                fecha = ahora - 2 * hora,
+                interno = true
+            )
+        )
         dao.insertarComentario(
             Comentario(
                 ticketId = ticketCuenta, autorId = 2, autorNombre = "Ana Soporte", autorRol = Rol.ADMIN.name,
