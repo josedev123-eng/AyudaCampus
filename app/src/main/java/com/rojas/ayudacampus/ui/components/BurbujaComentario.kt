@@ -1,6 +1,8 @@
 package com.rojas.ayudacampus.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -22,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rojas.ayudacampus.data.local.entity.Comentario
@@ -50,10 +54,18 @@ fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
     val colorFondo = if (c.interno) EstadoAbierto.copy(alpha = 0.15f) else if (esPropio) MaterialTheme.colorScheme.primary else colorOtro
     val colorContenido = if (c.interno) MaterialTheme.colorScheme.onSurface else if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
 
+    val inicial = autor.trim().firstOrNull()?.uppercaseChar() ?: '?'
+
     Row(
         horizontalArrangement = if (esPropio && !c.interno) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom,
         modifier = Modifier.fillMaxWidth()
     ) {
+        if (!esPropio || c.interno) {
+            AvatarAutor(inicial)
+            Spacer(Modifier.width(8.dp))
+        }
+
         Surface(
             color = colorFondo,
             contentColor = colorContenido,
@@ -92,6 +104,29 @@ fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
                 Text(c.texto, style = MaterialTheme.typography.bodyMedium)
             }
         }
+
+        if (esPropio && !c.interno) {
+            Spacer(Modifier.width(8.dp))
+            AvatarAutor(inicial)
+        }
+    }
+}
+
+@Composable
+private fun AvatarAutor(inicial: Char) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Text(
+            text = inicial.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     }
 }
 

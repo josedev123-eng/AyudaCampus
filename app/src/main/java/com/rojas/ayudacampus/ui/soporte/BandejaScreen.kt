@@ -2,7 +2,6 @@ package com.rojas.ayudacampus.ui.soporte
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rojas.ayudacampus.model.Prioridad
+import com.rojas.ayudacampus.ui.components.EstadoVacio
 import com.rojas.ayudacampus.ui.components.TicketCard
 import com.rojas.ayudacampus.ui.components.iconoCategoria
 import com.rojas.ayudacampus.viewmodel.BandejaViewModel
@@ -212,22 +212,12 @@ fun BandejaScreen(
             }
 
             if (tickets.isEmpty()) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Filled.Inbox,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            if (filtros.hayFiltrosActivos()) "No hay tickets con esos filtros"
-                            else "No hay tickets aquí",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                EstadoVacio(
+                    icono = Icons.Filled.Inbox,
+                    titulo = "Bandeja limpia",
+                    mensaje = "No hay tickets que coincidan. ¡Buen trabajo!",
+                    modifier = Modifier.fillMaxSize()
+                )
             } else {
                 // Ya vienen ordenados por prioridad (ALTA, MEDIA, BAJA) desde el DAO
                 LazyColumn(
@@ -239,7 +229,8 @@ fun BandejaScreen(
                             item = itemSla.item,
                             sla = itemSla.sla,
                             onClick = { onAtender(itemSla.item.ticket.id) },
-                            mostrarCliente = true
+                            mostrarCliente = true,
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }

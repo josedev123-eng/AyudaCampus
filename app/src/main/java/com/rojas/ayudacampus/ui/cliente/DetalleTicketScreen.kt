@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,6 +51,7 @@ import com.rojas.ayudacampus.ui.components.AyudaButton
 import com.rojas.ayudacampus.ui.components.BurbujaComentario
 import com.rojas.ayudacampus.ui.components.CampoMensaje
 import com.rojas.ayudacampus.ui.components.EstadoChip
+import com.rojas.ayudacampus.ui.components.EstadoVacio
 import com.rojas.ayudacampus.ui.components.Estrellas
 import com.rojas.ayudacampus.ui.components.PrioridadChip
 import com.rojas.ayudacampus.ui.components.StepperTicket
@@ -145,16 +147,18 @@ fun DetalleTicketScreen(
                 }
                 if (d.comentarios.isEmpty()) {
                     item {
-                        Text(
-                            "Aún no hay comentarios.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        EstadoVacio(
+                            icono = Icons.Default.Chat,
+                            titulo = "Aún no hay mensajes",
+                            mensaje = "",
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
-                items(d.comentarios.sortedBy { it.fecha }, key = { it.id }) { c ->
-                    // Los míos a la derecha
-                    BurbujaComentario(c, esPropio = c.autorId == usuario.id)
+                } else {
+                    items(d.comentarios.sortedBy { it.fecha }, key = { it.id }) { c ->
+                        // Los míos a la derecha
+                        BurbujaComentario(c, esPropio = c.autorId == usuario.id)
+                    }
                 }
 
                 // Calificar y cerrar, o reabrir

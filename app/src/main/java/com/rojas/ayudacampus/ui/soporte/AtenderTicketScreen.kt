@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,6 +54,7 @@ import com.rojas.ayudacampus.model.Rol
 import com.rojas.ayudacampus.ui.components.AyudaButton
 import com.rojas.ayudacampus.ui.components.BurbujaComentario
 import com.rojas.ayudacampus.ui.components.CampoMensaje
+import com.rojas.ayudacampus.ui.components.EstadoVacio
 import com.rojas.ayudacampus.ui.components.colorEstado
 import com.rojas.ayudacampus.ui.components.colorPrioridad
 import com.rojas.ayudacampus.ui.components.numeroTicket
@@ -168,8 +171,19 @@ fun AtenderTicketScreen(
 
                 // Conversación: para Soporte, los mensajes propios son los del rol ADMIN
                 item { Text("Conversación", style = MaterialTheme.typography.titleSmall) }
-                items(d.comentarios.sortedBy { it.fecha }, key = { it.id }) { c ->
-                    BurbujaComentario(c, esPropio = c.autorRol == Rol.ADMIN.name)
+                if (d.comentarios.isEmpty()) {
+                    item {
+                        EstadoVacio(
+                            icono = Icons.Default.Chat,
+                            titulo = "Aún no hay mensajes",
+                            mensaje = "",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
+                    items(d.comentarios.sortedBy { it.fecha }, key = { it.id }) { c ->
+                        BurbujaComentario(c, esPropio = c.autorRol == Rol.ADMIN.name)
+                    }
                 }
 
                 if (cerrado) {

@@ -72,7 +72,12 @@ fun CategoriasScreen(vm: CategoriasViewModel, onEditar: (Int) -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(categorias, key = { it.id }) { c ->
-                    CategoriaItem(c, onToggle = { vm.alternar(c) }, onEditar = { onEditar(c.id) })
+                    CategoriaItem(
+                        c = c,
+                        onToggle = { vm.alternar(c) },
+                        onEditar = { onEditar(c.id) },
+                        modifier = Modifier.animateItem()
+                    )
                 }
             }
         }
@@ -80,11 +85,16 @@ fun CategoriasScreen(vm: CategoriasViewModel, onEditar: (Int) -> Unit) {
 }
 
 @Composable
-fun CategoriaItem(c: Categoria, onToggle: () -> Unit, onEditar: () -> Unit) {
+fun CategoriaItem(
+    c: Categoria,
+    onToggle: () -> Unit,
+    onEditar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(12.dp)) {
             Box(

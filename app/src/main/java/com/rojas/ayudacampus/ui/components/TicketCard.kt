@@ -44,14 +44,15 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Franja de color de la prioridad + icono de la categoría + chips de estado, prioridad y SLA
+// Franja vertical de 4.dp a la izquierda con el color de la prioridad + icono de la categoría + chips
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketCard(
     item: TicketConDetalle,
     onClick: () -> Unit,
     mostrarCliente: Boolean = false,
-    sla: SlaInfo? = null
+    sla: SlaInfo? = null,
+    modifier: Modifier = Modifier
 ) {
     val t = item.ticket
     // Estudiante: ubicación (o categoría). Soporte: nombre corto del cliente
@@ -66,13 +67,13 @@ fun TicketCard(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(Modifier.height(IntrinsicSize.Min)) {
-            // Franja de la prioridad
+            // Franja vertical de 4.dp a la izquierda con el color de la prioridad
             Box(
                 Modifier
-                    .width(6.dp)
+                    .width(4.dp)
                     .fillMaxHeight()
                     .background(colorPrioridad(t.prioridad))
             )

@@ -1,5 +1,10 @@
 package com.rojas.ayudacampus.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -167,10 +172,40 @@ fun NavAyuda(app: AyudaApp) {
             NavHost(
                 navController = nav,
                 startDestination = Rutas.SPLASH,
-                modifier = Modifier.padding(padding)
+                modifier = Modifier.padding(padding),
+                enterTransition = {
+                    fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                        initialOffsetX = { 300 },
+                        animationSpec = tween(300)
+                    )
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                        targetOffsetX = { -300 },
+                        animationSpec = tween(300)
+                    )
+                },
+                popEnterTransition = {
+                    fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                        initialOffsetX = { -300 },
+                        animationSpec = tween(300)
+                    )
+                },
+                popExitTransition = {
+                    fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                        targetOffsetX = { 300 },
+                        animationSpec = tween(300)
+                    )
+                }
             ) {
 
-                composable(Rutas.SPLASH) {
+                composable(
+                    Rutas.SPLASH,
+                    enterTransition = { fadeIn(animationSpec = tween(300)) },
+                    exitTransition = { fadeOut(animationSpec = tween(300)) },
+                    popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                ) {
                     // Si ya hay perfil guardado salta el login
                     SplashScreen(alTerminar = {
                         sesionVm.restaurarSesion { u ->
@@ -179,7 +214,13 @@ fun NavAyuda(app: AyudaApp) {
                     })
                 }
 
-                composable(Rutas.LOGIN) {
+                composable(
+                    Rutas.LOGIN,
+                    enterTransition = { fadeIn(animationSpec = tween(300)) },
+                    exitTransition = { fadeOut(animationSpec = tween(300)) },
+                    popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                ) {
                     LoginScreen(
                         vm = sesionVm,
                         onIngresar = { u -> irAPrincipal(u.rol) },
@@ -257,8 +298,9 @@ fun NavAyuda(app: AyudaApp) {
                 navigation(route = Rutas.GRAFO_SOPORTE, startDestination = Rutas.PANEL) {
 
                     composable(Rutas.PANEL) {
+                        val u = usuario ?: return@composable
                         val vm: PanelViewModel = viewModel(factory = fabrica)
-                        PanelScreen(vm = vm, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
+                        PanelScreen(vm = vm, usuario = u, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
                     }
 
                     composable(Rutas.BANDEJA) {

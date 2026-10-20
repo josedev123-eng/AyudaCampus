@@ -1,5 +1,8 @@
 package com.rojas.ayudacampus.ui.components.graficos
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +42,14 @@ fun GraficoDona(datos: List<DatoGrafico>, modifier: Modifier = Modifier) {
     val total = datos.sumOf { it.valor.toDouble() }.toFloat()
     val colorVacio = MaterialTheme.colorScheme.outlineVariant
 
+    val animProgress = remember(datos) { Animatable(0f) }
+    LaunchedEffect(datos) {
+        animProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(900, easing = FastOutSlowInEasing)
+        )
+    }
+
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         // Dona con el total al centro
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(120.dp)) {
@@ -51,18 +64,19 @@ fun GraficoDona(datos: List<DatoGrafico>, modifier: Modifier = Modifier) {
                     )
                 } else {
                     var angulo = -90f
+                    val progress = animProgress.value
                     datos.forEach { d ->
-                        val barrido = d.valor / total * 360f
+                        val barrido = (d.valor / total * 360f) * progress
                         drawArc(
                             color = d.color, startAngle = angulo, sweepAngle = barrido, useCenter = false,
                             topLeft = esquina, size = tamano, style = Stroke(width = grosor)
                         )
-                        angulo += barrido
+                        angulo += (d.valor / total * 360f) * progress
                     }
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${total.toInt()}", style = MaterialTheme.typography.titleLarge)
+                Text("${(total * animProgress.value).toInt()}", style = MaterialTheme.typography.titleLarge)
                 Text("tickets", style = MaterialTheme.typography.labelSmall)
             }
         }
