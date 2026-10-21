@@ -43,7 +43,7 @@ import java.util.Locale
 fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
     // "Tú · 10:32" o "Soporte TI · 10:20"
     val autor = when {
-        esPropio && !c.interno -> "Tú"
+        esPropio -> "Tú"
         c.autorRol == Rol.ADMIN.name -> "Soporte TI"
         else -> c.autorNombre
     }
@@ -54,14 +54,15 @@ fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
     val colorFondo = if (c.interno) EstadoAbierto.copy(alpha = 0.15f) else if (esPropio) MaterialTheme.colorScheme.primary else colorOtro
     val colorContenido = if (c.interno) MaterialTheme.colorScheme.onSurface else if (esPropio) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
 
-    val inicial = autor.trim().firstOrNull()?.uppercaseChar() ?: '?'
+    // La inicial del avatar siempre usa c.autorNombre
+    val inicial = c.autorNombre.trim().firstOrNull()?.uppercaseChar() ?: '?'
 
     Row(
-        horizontalArrangement = if (esPropio && !c.interno) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = if (esPropio) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom,
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (!esPropio || c.interno) {
+        if (!esPropio) {
             AvatarAutor(inicial)
             Spacer(Modifier.width(8.dp))
         }
@@ -72,8 +73,8 @@ fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
-                bottomStart = if (esPropio && !c.interno) 16.dp else 4.dp,
-                bottomEnd = if (esPropio && !c.interno) 4.dp else 16.dp
+                bottomStart = if (esPropio) 16.dp else 4.dp,
+                bottomEnd = if (esPropio) 4.dp else 16.dp
             ),
             modifier = Modifier.widthIn(max = 260.dp)
         ) {
@@ -105,7 +106,7 @@ fun BurbujaComentario(c: Comentario, esPropio: Boolean) {
             }
         }
 
-        if (esPropio && !c.interno) {
+        if (esPropio) {
             Spacer(Modifier.width(8.dp))
             AvatarAutor(inicial)
         }

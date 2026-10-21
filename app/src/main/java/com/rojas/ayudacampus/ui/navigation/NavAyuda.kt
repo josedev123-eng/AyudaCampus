@@ -68,6 +68,7 @@ fun NavAyuda(app: AyudaApp) {
     val sesionVm: SesionViewModel = viewModel(factory = fabrica)
     val usuario by sesionVm.usuarioActual.collectAsState()
     val oscuro by sesionVm.modoOscuro.collectAsState()
+    val notificaciones by sesionVm.notificaciones.collectAsState()
     val recibirTickets by sesionVm.recibirTickets.collectAsState()
 
     // Ruta actual, para saber qué ítem de la barra marcar
@@ -207,11 +208,18 @@ fun NavAyuda(app: AyudaApp) {
                     popExitTransition = { fadeOut(animationSpec = tween(300)) }
                 ) {
                     // Si ya hay perfil guardado salta el login
-                    SplashScreen(alTerminar = {
-                        sesionVm.restaurarSesion { u ->
-                            if (u == null) irALogin() else irAPrincipal(u.rol)
-                        }
-                    })
+                    SplashScreen(
+                        alTerminar = { callback ->
+                            sesionVm.restaurarSesion { u ->
+                                if (u != null) {
+                                    irAPrincipal(u.rol)
+                                }
+                                callback(u)
+                            }
+                        },
+                        onComenzar = { nav.navigate(Rutas.REGISTRO) },
+                        onTengoCuenta = { nav.navigate(Rutas.LOGIN) }
+                    )
                 }
 
                 composable(
@@ -248,6 +256,7 @@ fun NavAyuda(app: AyudaApp) {
                         MisTicketsScreen(
                             vm = vm,
                             usuario = u,
+                            notificacionesActivadas = notificaciones,
                             onAbrir = { id -> nav.navigate(Rutas.detalle(id)) },
                             onNuevo = { irATab(Rutas.NUEVO_TICKET) }
                         )
@@ -300,7 +309,12 @@ fun NavAyuda(app: AyudaApp) {
                     composable(Rutas.PANEL) {
                         val u = usuario ?: return@composable
                         val vm: PanelViewModel = viewModel(factory = fabrica)
-                        PanelScreen(vm = vm, usuario = u, onVerBandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) })
+                        PanelScreen(
+                            vm = vm,
+                            usuario = u,
+                            notificacionesActivadas = notificaciones,
+                            onIrABandeja = { irATab(Rutas.BANDEJA, Rutas.PANEL) }
+                        )
                     }
 
                     composable(Rutas.BANDEJA) {

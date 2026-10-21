@@ -64,6 +64,11 @@ class MisTicketsViewModel(
         .map { lista -> lista.count { it.ticket.estado == EstadoTicket.ABIERTO.name } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    // Para el badge de la campanita: tickets pendientes de calificar (solo RESUELTO)
+    val pendientesCalificar: StateFlow<Int> = misTickets
+        .map { lista -> lista.count { it.ticket.estado == EstadoTicket.RESUELTO.name } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
     // Para el perfil: resueltos (incluye cerrados) y total
     val cantidadResueltos: StateFlow<Int> = misTickets
         .map { lista ->

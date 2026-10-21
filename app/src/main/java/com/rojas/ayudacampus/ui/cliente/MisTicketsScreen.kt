@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -57,12 +59,14 @@ private val FILTROS = listOf(
 fun MisTicketsScreen(
     vm: MisTicketsViewModel,
     usuario: Usuario,
+    notificacionesActivadas: Boolean = true,
     onAbrir: (Int) -> Unit,
     onNuevo: () -> Unit
 ) {
     val tickets by vm.tickets.collectAsState()
     val filtro by vm.filtro.collectAsState()
     val busqueda by vm.busqueda.collectAsState()
+    val pendientesCalificar by vm.pendientesCalificar.collectAsState()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -109,12 +113,23 @@ fun MisTicketsScreen(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                         )
                     }
-                    IconButton(onClick = { }) {
-                        Icon(
-                            Icons.Filled.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+
+                    if (notificacionesActivadas) {
+                        BadgedBox(
+                            badge = {
+                                if (pendientesCalificar > 0) {
+                                    Badge { Text("$pendientesCalificar") }
+                                }
+                            }
+                        ) {
+                            IconButton(onClick = { vm.cambiarFiltro("RESUELTO") }) {
+                                Icon(
+                                    Icons.Filled.Notifications,
+                                    contentDescription = "Notificaciones",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }

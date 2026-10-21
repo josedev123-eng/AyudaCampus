@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -63,7 +65,8 @@ import com.rojas.ayudacampus.viewmodel.PanelViewModel
 fun PanelScreen(
     vm: PanelViewModel,
     usuario: Usuario,
-    onVerBandeja: () -> Unit
+    notificacionesActivadas: Boolean = true,
+    onIrABandeja: () -> Unit
 ) {
     val abiertos by vm.abiertos.collectAsState()
     val enProceso by vm.enProceso.collectAsState()
@@ -119,12 +122,23 @@ fun PanelScreen(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                         )
                     }
-                    IconButton(onClick = { }) {
-                        Icon(
-                            Icons.Filled.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+
+                    if (notificacionesActivadas) {
+                        BadgedBox(
+                            badge = {
+                                if (altas > 0) {
+                                    Badge { Text("$altas") }
+                                }
+                            }
+                        ) {
+                            IconButton(onClick = onIrABandeja) {
+                                Icon(
+                                    Icons.Filled.Notifications,
+                                    contentDescription = "Notificaciones",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -218,7 +232,7 @@ fun PanelScreen(
                                 )
                             }
                             Button(
-                                onClick = onVerBandeja,
+                                onClick = onIrABandeja,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = PrioridadAlta,
                                     contentColor = Color.White
